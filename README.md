@@ -33,7 +33,7 @@ flowchart TD
     E --> A
 ```
 
-## ✨ Features
+##  Features
 
 - Streaming chat interface with real-time AI responses
 - Multi-provider LLM support (OpenAI, Claude, local Ollama)
@@ -59,7 +59,7 @@ flowchart TD
 | Proxy | Nginx |
 | Deployment | Docker Compose |
 
-## 🚀 How to Run
+##  How to Run
 
 ```bash
 # 1. Clone repository
