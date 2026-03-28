@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f0f1a">
+    <title>AI Voice Companion</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="avatar">
+                <span>AI</span>
+            </div>
+            <h1>Voice Companion</h1>
+            <p class="status" id="status">Hold mic to talk</p>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="message assistant">
+                <p>Hey! I'm here whenever you want to talk.</p>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="textInput" placeholder="Type a message..." autocomplete="off" enterkeyhint="send">
+            <button id="sendBtn">Send</button>
+            <button class="mic-btn" id="micBtn" aria-label="Hold to speak">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const micBtn = document.getElementById('micBtn');
+        const status = document.getElementById('status');
+        const chatArea = document.getElementById('chatArea');
+
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let isProcessing = false;
+        let typingIndicator = null;
+
+        // Audio element for playback
+        const globalAudio = new Audio();
+        globalAudio.volume = 1.0;
+        let audioUnlocked = false;
+
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            globalAudio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+xDEAAAFYANX0AAAIgAANIAAAARMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQxCQAAADSAAAAAAAAANIAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EMQvAAAD0gAAAAAAAAPSAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xDEOgAAA9IAAAAAAAAD0gAAAABMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+            globalAudio.play().then(() => {
+                audioUnlocked = true;
+                console.log('Audio unlocked');
+            }).catch(() => {});
+        }
+
+        function addMessage(text, role) {
+            removeTypingIndicator();
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.innerHTML = `<p>${escapeHtml(text)}</p>`;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showTypingIndicator() {
+            if (typingIndicator) return;
+            typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+            chatArea.appendChild(typingIndicator);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            if (typingIndicator) {
+                typingIndicator.remove();
+                typingIndicator = null;
+            }
+        }
+
+        function setStatus(text, state = '') {
+            status.textContent = text;
+            status.className = 'status' + (state ? ' ' + state : '');
+        }
+
+        function finishProcessing() {
+            isProcessing = false;
+            isRecording = false;
+            sendBtn.disabled = false;
+            micBtn.disabled = false;
+            micBtn.classList.remove('listening');
+            setStatus('Hold mic to talk');
+        }
+
+        async function sendMessage(text) {
+            if (!text.trim() || isProcessing) return;
+
+            isProcessing = true;
+            setStatus('Thinking...', 'processing');
+            sendBtn.disabled = true;
+            micBtn.disabled = true;
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await response.json();
+                removeTypingIndicator();
+
+                if (data.error) {
+                    finishProcessing();
+                    setStatus('Error occurred');
+                    return;
+                }
+
+                addMessage(data.text, 'assistant');
+                playAudio(data.audio);
+
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator();
+                finishProcessing();
+                setStatus('Connection error');
+            }
+        }
+
+        function playAudio(base64Audio) {
+            setStatus('Speaking...', 'processing');
+
+            globalAudio.onended = () => {
+                console.log('Audio ended');
+                finishProcessing();
+            };
+
+            globalAudio.onerror = () => {
+                console.log('Audio error');
+                finishProcessing();
+            };
+
+            globalAudio.src = 'data:audio/mp3;base64,' + base64Audio;
+
+            globalAudio.play().then(() => {
+                console.log('Playing audio');
+                if (globalAudio.duration && isFinite(globalAudio.duration)) {
+                    setTimeout(() => {
+                        if (isProcessing) finishProcessing();
+                    }, (globalAudio.duration * 1000) + 500);
+                }
+            }).catch(() => {
+                console.log('Play failed');
+                finishProcessing();
+            });
+        }
+
+        // Text input handlers
+        sendBtn.addEventListener('click', () => {
+            unlockAudio();
+            const text = textInput.value.trim();
+            if (text && !isProcessing) {
+                addMessage(text, 'user');
+                textInput.value = '';
+                sendMessage(text);
+            }
+        });
+
+        textInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                unlockAudio();
+                const text = textInput.value.trim();
+                if (text && !isProcessing) {
+                    addMessage(text, 'user');
+                    textInput.value = '';
+                    sendMessage(text);
+                }
+            }
+        });
+
+        // ===== HOLD TO RECORD (using MediaRecorder + Whisper) =====
+
+        async function startRecording(e) {
+            e.preventDefault();
+            unlockAudio();
+
+            if (isProcessing || isRecording) return;
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                audioChunks = [];
+
+                // Try to use a format that works well
+                let mimeType = 'audio/webm';
+                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                    mimeType = 'audio/webm;codecs=opus';
+                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    mimeType = 'audio/mp4';
+                } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+                    mimeType = 'audio/ogg';
+                }
+                console.log('Using mime type:', mimeType);
+
+                mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+                mediaRecorder.ondataavailable = (event) => {
+                    console.log('Data available:', event.data.size, 'bytes');
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    console.log('Recording stopped, chunks:', audioChunks.length);
+                    // Stop all tracks
+                    stream.getTracks().forEach(track => track.stop());
+
+                    if (audioChunks.length === 0) {
+                        setStatus('No audio recorded');
+                        finishProcessing();
+                        return;
+                    }
+
+                    // Convert to blob
+                    const audioBlob = new Blob(audioChunks, { type: mimeType });
+                    console.log('Audio blob size:', audioBlob.size);
+
+                    if (audioBlob.size < 1000) {
+                        setStatus('Recording too short');
+                        finishProcessing();
+                        return;
+                    }
+
+                    // Convert to base64
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64 = reader.result.split(',')[1];
+                        console.log('Base64 length:', base64.length);
+                        await transcribeAndSend(base64, mimeType);
+                    };
+                    reader.readAsDataURL(audioBlob);
+                };
+
+                mediaRecorder.start(100); // Collect data every 100ms
+                isRecording = true;
+                micBtn.classList.add('listening');
+                setStatus('Listening...', 'listening');
+                console.log('Recording started');
+
+            } catch (err) {
+                console.error('Mic error:', err);
+                setStatus('Allow microphone');
+            }
+        }
+
+        function stopRecording(e) {
+            e.preventDefault();
+
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('listening');
+                setStatus('Processing...', 'processing');
+                console.log('Recording stopped');
+            }
+        }
+
+        async function transcribeAndSend(audioBase64, mimeType) {
+            isProcessing = true;
+            sendBtn.disabled = true;
+            micBtn.disabled = true;
+
+            try {
+                setStatus('Transcribing...', 'processing');
+                console.log('Sending audio for transcription...');
+
+                const response = await fetch('/transcribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ audio: audioBase64, mimeType: mimeType })
+                });
+
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Transcription response:', data);
+
+                if (data.error) {
+                    console.error('Transcription error:', data.error);
+                    setStatus("Didn't catch that");
+                    finishProcessing();
+                    return;
+                }
+
+                if (!data.text) {
+                    setStatus("Didn't hear anything");
+                    finishProcessing();
+                    return;
+                }
+
+                const transcript = data.text.trim();
+                if (!transcript) {
+                    setStatus("Didn't hear anything");
+                    finishProcessing();
+                    return;
+                }
+
+                console.log('Transcribed:', transcript);
+                addMessage(transcript, 'user');
+
+                // Reset processing state before sending (sendMessage will set it again)
+                isProcessing = false;
+                await sendMessage(transcript);
+
+            } catch (error) {
+                console.error('Transcription error:', error);
+                setStatus('Connection error');
+                finishProcessing();
+            }
+        }
+
+        // Mouse events
+        micBtn.addEventListener('mousedown', startRecording);
+        micBtn.addEventListener('mouseup', stopRecording);
+        micBtn.addEventListener('mouseleave', (e) => {
+            if (isRecording) stopRecording(e);
+        });
+
+        // Touch events
+        micBtn.addEventListener('touchstart', startRecording, { passive: false });
+        micBtn.addEventListener('touchend', stopRecording, { passive: false });
+        micBtn.addEventListener('touchcancel', stopRecording, { passive: false });
+
+        // Prevent annoying mobile behaviors
+        micBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+        micBtn.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    </script>
+</body>
+</html>

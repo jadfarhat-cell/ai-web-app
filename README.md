@@ -1,87 +1,190 @@
-# AI Web App
+# AI Voice Companion
 
-A full-stack AI-powered web application featuring a modern React frontend and a FastAPI backend, integrating large language models for intelligent conversational features, content generation, and data analysis.
+A real-time voice chat application that combines Claude AI for natural conversation, OpenAI Whisper for speech recognition, and ElevenLabs for lifelike text-to-speech.
 
-## Architecture
-
-![Architecture Diagram](https://mermaid.ink/svg/Zmxvd2NoYXJ0IFRECiBBWyBVc2VyIEJyb3dzZXJcblJlYWN0ICsgVGFpbHdpbmRDU1NdIC0tPnxIVFRQU3wgQltOZ2lueFxuUmV2ZXJzZSBQcm94eSArIFN0YXRpYyBGaWxlc10KIEIgLS0-IENbRmFzdEFQSSBCYWNrZW5kXG5QeXRob24gMy4xMCtdCiAKIEMgLS0-IER7UmVxdWVzdCBSb3V0ZXJ9CiBEIC0tPnxBdXRofCBFW0pXVCBBdXRoIFNlcnZpY2Vcbk9BdXRoMiAvIEFQSSBLZXlzXQogRCAtLT58QUkgUmVxdWVzdHwgRltBSSBPcmNoZXN0cmF0b3JdCiBEIC0tPnxEYXRhfCBHW0RhdGEgU2VydmljZV0KIAogRiAtLT4gSFtMTE0gR2F0ZXdheV0KIEggLS0-IEgxW09wZW5BSSBHUFQtNF0KIEggLS0-IEgyW0FudGhyb3BpYyBDbGF1ZGVdCiBIIC0tPiBIM1tMb2NhbCBPbGxhbWFdCiAKIEYgLS0-IElbUHJvbXB0IE1hbmFnZXJcblRlbXBsYXRlcyArIEhpc3RvcnldCiBGIC0tPiBKW1Jlc3BvbnNlIFN0cmVhbWVyXG5TU0UgLyBXZWJTb2NrZXRzXQogCiBHIC0tPiBLWyhQb3N0Z3JlU1FMXG5Vc2VycyArIEhpc3RvcnkpXQogRyAtLT4gTFsoUmVkaXNcblNlc3Npb24gQ2FjaGUgKyBSYXRlIExpbWl0KV0KIAogQyAtLT4gTVtCYWNrZ3JvdW5kIFRhc2tzXG5DZWxlcnkgV29ya2Vyc10KIE0gLS0-IE5bRmlsZSBQcm9jZXNzb3JcblBERiAvIEltYWdlIEFuYWx5c2lzXQogTSAtLT4gT1tBc3luYyBBSSBKb2JzXQogCiBKIC0tPnxTdHJlYW18IEEKIEUgLS0-IEE)
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0+-green?logo=flask&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-AI-purple?logo=anthropic&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## Features
 
-- Streaming chat interface with real-time AI responses
-- Multi-provider LLM support (OpenAI, Claude, local Ollama)
-- User authentication with JWT + OAuth2 (Google, GitHub)
-- Conversation history with full persistence
-- File upload and AI-powered analysis (PDF, images)
-- Rate limiting and usage tracking
-- Responsive mobile-first design
-- Dark/light mode
-- REST API with OpenAPI docs
+- **Voice Input**: Hold-to-record with real-time transcription via OpenAI Whisper
+- **AI Conversation**: Natural dialogue powered by Claude (Anthropic)
+- **Voice Output**: Lifelike speech synthesis with ElevenLabs (supports custom voice clones)
+- **Mobile-First UI**: Responsive dark theme optimized for touch devices
+- **Conversation Memory**: Maintains context across messages
+- **Text Fallback**: Type messages when voice isn't convenient
+
+## Demo
+
+https://github.com/user-attachments/assets/demo-placeholder
+
+> *Hold the mic button to speak, release to send. The AI responds with both text and voice.*
+
+## Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │     │                 │
+│   Browser UI    │────▶│   Flask API     │────▶│   Claude AI     │
+│   (JavaScript)  │     │   (Python)      │     │   (Anthropic)   │
+│                 │◀────│                 │◀────│                 │
+└─────────────────┘     └────────┬────────┘     └─────────────────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    │                         │
+                    ▼                         ▼
+           ┌───────────────┐         ┌───────────────┐
+           │               │         │               │
+           │ OpenAI Whisper│         │  ElevenLabs   │
+           │ (Speech-to-   │         │  (Text-to-    │
+           │  Text)        │         │   Speech)     │
+           │               │         │               │
+           └───────────────┘         └───────────────┘
+```
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, TailwindCSS, Zustand |
-| Backend | FastAPI, Python 3.10+ |
-| LLM APIs | OpenAI, Anthropic, Ollama |
-| Database | PostgreSQL + SQLAlchemy |
-| Cache | Redis |
-| Auth | JWT, OAuth2 |
-| Task Queue | Celery |
-| Proxy | Nginx |
-| Deployment | Docker Compose |
+| Component | Technology |
+|-----------|------------|
+| Backend | Flask (Python) |
+| LLM | Claude 3.5 Sonnet (Anthropic) |
+| Speech-to-Text | OpenAI Whisper |
+| Text-to-Speech | ElevenLabs |
+| Frontend | Vanilla JavaScript, CSS3 |
+| Audio | Web Audio API, MediaRecorder |
 
-## How to Run
+## Quick Start
+
+### Prerequisites
+
+- Python 3.10+
+- API keys for:
+  - [Anthropic](https://console.anthropic.com/) (Claude)
+  - [OpenAI](https://platform.openai.com/) (Whisper)
+  - [ElevenLabs](https://elevenlabs.io/) (Text-to-Speech)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/ai-voice-companion.git
+   cd ai-voice-companion
+   ```
+
+2. **Create virtual environment**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API keys
+   ```
+
+5. **Run the application**
+   ```bash
+   python app.py
+   ```
+
+6. **Open in browser**
+   ```
+   http://localhost:5000
+   ```
+
+## Configuration
+
+Create a `.env` file with the following variables:
+
+```env
+# Required API Keys
+ANTHROPIC_API_KEY=your_anthropic_api_key
+OPENAI_API_KEY=your_openai_api_key
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+ELEVENLABS_VOICE_ID=your_voice_id
+
+# Optional Settings
+HOST=0.0.0.0
+PORT=5000
+DEBUG=false
+```
+
+### Getting Your Voice ID
+
+1. Go to [ElevenLabs Voice Lab](https://elevenlabs.io/voice-lab)
+2. Select a pre-made voice or clone your own
+3. Click the voice and copy the Voice ID from the URL or settings
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Serve the chat interface |
+| `/chat` | POST | Send message, get AI response + audio |
+| `/transcribe` | POST | Convert audio to text |
+| `/reset` | POST | Clear conversation history |
+| `/health` | GET | Health check for deployment |
+
+## Deployment
+
+### Docker
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/jadfarhat-cell/ai-web-app.git
-cd ai-web-app
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env: add OPENAI_API_KEY, DATABASE_URL, SECRET_KEY, etc.
-
-# 3. Start all services with Docker Compose
-docker-compose up -d
-
-# 4. Or run manually:
-# Backend
-pip install -r backend/requirements.txt
-uvicorn backend.main:app --reload --port 8000
-
-# Frontend
-cd frontend && npm install && npm run dev
-
-# 5. Access the app
-# Frontend: http://localhost:3000
-# API Docs: http://localhost:8000/docs
+docker build -t ai-voice-companion .
+docker run -p 5000:5000 --env-file .env ai-voice-companion
 ```
+
+### Railway / Render / Heroku
+
+The app includes a `Dockerfile` and is ready for one-click deployment:
+
+1. Connect your GitHub repository
+2. Set environment variables in the platform dashboard
+3. Deploy
 
 ## Project Structure
 
 ```
-ai-web-app/
-├── backend/
-│ ├── main.py # FastAPI app + routes
-│ ├── auth/ # JWT + OAuth handlers
-│ ├── ai/
-│ │ ├── orchestrator.py # LLM routing logic
-│ │ ├── openai_client.py
-│ │ ├── claude_client.py
-│ │ └── prompts/ # Prompt templates
-│ ├── models/ # SQLAlchemy models
-│ ├── tasks/ # Celery background tasks
-│ └── requirements.txt
-├── frontend/
-│ ├── src/
-│ │ ├── components/ # React components
-│ │ ├── pages/ # Route pages
-│ │ ├── store/ # Zustand state
-│ │ └── api/ # API client
-│ └── package.json
-├── docker-compose.yml
-├── nginx.conf
-└── .env.example
+ai-voice-companion/
+├── app.py              # Main Flask application
+├── config.py           # Configuration and settings
+├── requirements.txt    # Python dependencies
+├── Dockerfile          # Container configuration
+├── .env.example        # Environment template
+├── templates/
+│   └── index.html      # Chat interface
+└── static/
+    └── style.css       # Styling
 ```
+
+## Customization
+
+### Changing the AI Personality
+
+Edit the `SYSTEM_PROMPT` in `config.py` to customize how the AI responds:
+
+```python
+SYSTEM_PROMPT = """You are a helpful assistant who speaks concisely..."""
+```
+
+### Using a Different Voice
+
+Update `ELEVENLABS_VOICE_ID` in your `.env` file with any ElevenLabs voice ID.
+
+## License
+
+MIT License - feel free to use this project for learning or as a starting point for your own applications.
+
+## Acknowledgments
+
+- [Anthropic](https://anthropic.com) for Claude AI
+- [OpenAI](https://openai.com) for Whisper
+- [ElevenLabs](https://elevenlabs.io) for voice synthesis
