@@ -1,39 +1,39 @@
-# 🌐 AI Web App
+# AI Web App
 
 A full-stack AI-powered web application featuring a modern React frontend and a FastAPI backend, integrating large language models for intelligent conversational features, content generation, and data analysis.
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart TD
-    A[👤 User Browser\nReact + TailwindCSS] -->|HTTPS| B[Nginx\nReverse Proxy + Static Files]
-    B --> C[FastAPI Backend\nPython 3.10+]
-    
-    C --> D{Request Router}
-    D -->|Auth| E[JWT Auth Service\nOAuth2 / API Keys]
-    D -->|AI Request| F[AI Orchestrator]
-    D -->|Data| G[Data Service]
-    
-    F --> H[LLM Gateway]
-    H --> H1[OpenAI GPT-4]
-    H --> H2[Anthropic Claude]
-    H --> H3[Local Ollama]
-    
-    F --> I[Prompt Manager\nTemplates + History]
-    F --> J[Response Streamer\nSSE / WebSockets]
-    
-    G --> K[(PostgreSQL\nUsers + History)]
-    G --> L[(Redis\nSession Cache + Rate Limit)]
-    
-    C --> M[Background Tasks\nCelery Workers]
-    M --> N[File Processor\nPDF / Image Analysis]
-    M --> O[Async AI Jobs]
-    
-    J -->|Stream| A
-    E --> A
+ A[ User Browser\nReact + TailwindCSS] -->|HTTPS| B[Nginx\nReverse Proxy + Static Files]
+ B --> C[FastAPI Backend\nPython 3.10+]
+ 
+ C --> D{Request Router}
+ D -->|Auth| E[JWT Auth Service\nOAuth2 / API Keys]
+ D -->|AI Request| F[AI Orchestrator]
+ D -->|Data| G[Data Service]
+ 
+ F --> H[LLM Gateway]
+ H --> H1[OpenAI GPT-4]
+ H --> H2[Anthropic Claude]
+ H --> H3[Local Ollama]
+ 
+ F --> I[Prompt Manager\nTemplates + History]
+ F --> J[Response Streamer\nSSE / WebSockets]
+ 
+ G --> K[(PostgreSQL\nUsers + History)]
+ G --> L[(Redis\nSession Cache + Rate Limit)]
+ 
+ C --> M[Background Tasks\nCelery Workers]
+ M --> N[File Processor\nPDF / Image Analysis]
+ M --> O[Async AI Jobs]
+ 
+ J -->|Stream| A
+ E --> A
 ```
 
-##  Features
+## Features
 
 - Streaming chat interface with real-time AI responses
 - Multi-provider LLM support (OpenAI, Claude, local Ollama)
@@ -45,7 +45,7 @@ flowchart TD
 - Dark/light mode
 - REST API with OpenAPI docs
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -59,7 +59,7 @@ flowchart TD
 | Proxy | Nginx |
 | Deployment | Docker Compose |
 
-##  How to Run
+## How to Run
 
 ```bash
 # 1. Clone repository
@@ -86,28 +86,28 @@ cd frontend && npm install && npm run dev
 # API Docs: http://localhost:8000/docs
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ai-web-app/
 ├── backend/
-│   ├── main.py             # FastAPI app + routes
-│   ├── auth/               # JWT + OAuth handlers
-│   ├── ai/
-│   │   ├── orchestrator.py # LLM routing logic
-│   │   ├── openai_client.py
-│   │   ├── claude_client.py
-│   │   └── prompts/        # Prompt templates
-│   ├── models/             # SQLAlchemy models
-│   ├── tasks/              # Celery background tasks
-│   └── requirements.txt
+│ ├── main.py # FastAPI app + routes
+│ ├── auth/ # JWT + OAuth handlers
+│ ├── ai/
+│ │ ├── orchestrator.py # LLM routing logic
+│ │ ├── openai_client.py
+│ │ ├── claude_client.py
+│ │ └── prompts/ # Prompt templates
+│ ├── models/ # SQLAlchemy models
+│ ├── tasks/ # Celery background tasks
+│ └── requirements.txt
 ├── frontend/
-│   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── pages/          # Route pages
-│   │   ├── store/          # Zustand state
-│   │   └── api/            # API client
-│   └── package.json
+│ ├── src/
+│ │ ├── components/ # React components
+│ │ ├── pages/ # Route pages
+│ │ ├── store/ # Zustand state
+│ │ └── api/ # API client
+│ └── package.json
 ├── docker-compose.yml
 ├── nginx.conf
 └── .env.example
